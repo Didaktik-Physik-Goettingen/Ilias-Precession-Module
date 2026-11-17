@@ -4,7 +4,7 @@ Lernmodul zum Experiment "Kreiselpräzession" (Versuch 4) des Grundpraktikums zu
 
 Students reach the module through ILIAS. It prepares them for the lab session in one linear path: the setup, the physics of rotation (angular velocity, angular momentum and torque as vectors), the physical pendulum, the gyroscope, precession, nutation and the measurement strategy. It ends with the experiment guide and a personal summary of the learning path.
 
-<!-- The infrastructure (ILIAS bridge, PHP API, MySQL tracking, summary and HTML report) is taken from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module) of the same group. Compared to it, this module has one linear path instead of two strands, no decision pages and no scored tests. A 3D Unity simulation of the gyroscope (separate repository `ilias-precession-simulation`) is embedded on seven learning pages, one of them (Messstrategie 4/4) for free experimenting. -->
+<!-- The infrastructure (tracking, summary and HTML report; the login and API now in the portal `interapt-portal`) is taken from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module) of the same group. Compared to it, this module has one linear path instead of two strands, no decision pages and no scored tests. A 3D Unity simulation of the gyroscope (separate repository `ilias-precession-simulation`) is embedded on seven learning pages, one of them (Messstrategie 4/4) for free experimenting. -->
 
 The project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4, with strong help of Claude (Opus).
 
@@ -17,7 +17,6 @@ This README says how to run, deploy and extend the module. **Why** it is built t
 <summary>Project Structure Tree</summary>
 
 ```
-ilias_bridge.html                               // redirect to the portal's login page, for old ILIAS links
 .htaccess                                       // routing: Angular URLs → index.html (RewriteBase / locally)
 sim.version                                     // simulation release used by fetch-sim and the deploy
 .gitignore
@@ -119,7 +118,7 @@ Which simulation build is live: `https://interapt.uni-goettingen.de/precession/s
 Pushing to `master` triggers `.github/workflows/deploy.yml`:
 1. Installs Node, runs `npm ci`, fetches the simulation release named in `sim.version` (`tools/fetch-sim.sh`), builds the Angular app with `--base-href "https://interapt.uni-goettingen.de/precession/"`
 2. Writes a production `.htaccess` (`RewriteBase /precession/`) into the build output
-3. Uploads via SFTP: Angular dist incl. that `.htaccess` → `precession/`, and `ilias_bridge.html` (the redirect to the login page). The API and the login page are deployed with the portal.
+3. Uploads via SFTP: Angular dist incl. that `.htaccess` → `precession/`. The API and the login page are deployed with the portal.
 
 **One-time setup** — add these secrets in GitHub → repo → Settings → Secrets and variables → Actions:
 `SFTP_HOST`, `SFTP_PORT`, `SFTP_USER`, `SFTP_PASS`, `SFTP_REMOTE_DIR`
