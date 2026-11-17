@@ -101,12 +101,14 @@ export class P7Measurement implements OnInit, AfterViewInit, OnDestroy {
 	measureText3a!: SafeHtml;
 	measureText3b!: SafeHtml;
 
+	measureText4a!: SafeHtml;
+
 
     ngOnInit() {
         // subscribe to page param so nav-bar jumps update the view reactively
         this.pageSub = this.route.queryParams.subscribe(params => {
             const page = params['page'];
-            if (page && ['1','2','3'].includes(page)) {
+            if (page && ['1','2','3','4'].includes(page)) {
                 this.currentView = `measure${page}`;
                 this.renderMath();
             }
@@ -128,6 +130,8 @@ export class P7Measurement implements OnInit, AfterViewInit, OnDestroy {
 
         this.measureText3a = this.sanitizer.bypassSecurityTrustHtml(p7Content.measureText3a);
         this.measureText3b = this.sanitizer.bypassSecurityTrustHtml(p7Content.measureText3b);
+
+        this.measureText4a = this.sanitizer.bypassSecurityTrustHtml(p7Content.measureText4a);
     }
 
 
@@ -185,7 +189,7 @@ export class P7Measurement implements OnInit, AfterViewInit, OnDestroy {
         return this.currentView === 'measure1';
     }
     get isLastPage(): boolean {
-        return this.currentView === 'measure3';
+        return this.currentView === 'measure4';
     }
 
 
@@ -208,7 +212,7 @@ export class P7Measurement implements OnInit, AfterViewInit, OnDestroy {
     goForward() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         const page = Number(this.currentView.replace('measure', ''));
-        if (page === 3) {
+        if (page === 4) {
             this.router.navigate(['/learning/p8-deepening']);
             return;
         }

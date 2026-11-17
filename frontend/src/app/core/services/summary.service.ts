@@ -77,8 +77,8 @@ export class SummaryService {
         '/learning/p4-gyroscope':               3,
         '/learning/p5-precession':              3,
         '/learning/p6-nutation':                3,
-        '/learning/p7-measurement':             3,
-        '/learning/p8-deepening':               2,
+        '/learning/p7-measurement':             4,
+        '/learning/p8-deepening':               3,
     };
 
     // the Trägheitsmoment route holds pages 4 and 5 of Grundlagen der Rotation

@@ -19,6 +19,11 @@
     max-width: 560px;
 }
 
+/* wide figures (the Moon's orbit, two panels) */
+.full-width-image-container.figure-wide {
+    max-width: 760px;
+}
+
 /* drawn figures (SVG) and small script figures */
 .full-width-image-container.figure-small {
     max-width: 420px;

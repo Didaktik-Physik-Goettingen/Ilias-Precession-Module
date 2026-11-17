@@ -63,17 +63,19 @@ export const SEGMENTS: SegmentDef[] = [
         id: 'p7-measurement', label: 'Messstrategie',
         icon: 'M6 .5h4V2H6zM8 3a6.25 6.25 0 1 0 0 12.5A6.25 6.25 0 0 0 8 3zm0 1.6a4.65 4.65 0 1 1 0 9.3 4.65 4.65 0 0 1 0-9.3zM7.25 6h1.5v3.8h-1.5z',
         subpages: [
-            { label: '(1/3) - Reibung', route: '/learning/p7-measurement', queryParams: { page: '1' } },
-            { label: '(2/3) - Präzession sauber starten', route: '/learning/p7-measurement', queryParams: { page: '2' } },
-            { label: '(3/3) - Weitere Fehlerquellen', route: '/learning/p7-measurement', queryParams: { page: '3' } },
+            { label: '(1/4) - Reibung', route: '/learning/p7-measurement', queryParams: { page: '1' } },
+            { label: '(2/4) - Präzession sauber starten', route: '/learning/p7-measurement', queryParams: { page: '2' } },
+            { label: '(3/4) - Weitere Fehlerquellen', route: '/learning/p7-measurement', queryParams: { page: '3' } },
+            { label: '(4/4) - Freies Experimentieren', route: '/learning/p7-measurement', queryParams: { page: '4' } },
         ]
     },
     {
         id: 'p8-deepening', label: 'Vertiefung',
         icon: 'M8 1.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM8 2.8a5.2 5.2 0 1 1 0 10.4a5.2 5.2 0 1 1 0-10.4zM8 2.8a2.7 5.2 0 1 0 0 10.4a2.7 5.2 0 1 0 0-10.4zM8 2.8a1.4 5.2 0 1 1 0 10.4a1.4 5.2 0 1 1 0-10.4zM2.8 7.35v1.3h10.4v-1.3z',
         subpages: [
-            { label: '(1/2) - Freies Experimentieren', route: '/learning/p8-deepening', queryParams: { page: '1' } },
-            { label: '(2/2) - Kreisel im Kosmos', route: '/learning/p8-deepening', queryParams: { page: '2' } },
+            { label: '(1/3) - Die Erde als Kreisel', route: '/learning/p8-deepening', queryParams: { page: '1' } },
+            { label: '(2/3) - Der wandernde Himmelspol', route: '/learning/p8-deepening', queryParams: { page: '2' } },
+            { label: '(3/3) - Nutation der Erdachse', route: '/learning/p8-deepening', queryParams: { page: '3' } },
         ]
     },
 ];

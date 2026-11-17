@@ -10,8 +10,9 @@ import * as p4Questions from './p4-gyroscope/p4-gyroscope-questions';
 import * as p5Questions from './p5-precession/p5-precession-questions';
 import * as p6Questions from './p6-nutation/p6-nutation-questions';
 import * as p7Questions from './p7-measurement/p7-measurement-questions';
+import * as p8Questions from './p8-deepening/p8-deepening-questions';
 import { PAGE_REGISTRY } from '../../core/services/learning-report-registry';
-import { AdaptiveAnswerHint, AnyQuestion, SingleChoiceQuestion } from '../../shared/evaluation/question.types';
+import { AdaptiveAnswerHint, AnyQuestion, LabelingQuestion, SingleChoiceQuestion } from '../../shared/evaluation/question.types';
 import { SingleChoice } from '../../shared/evaluation/single-choice/single-choice';
 import { ResultsTracking } from '../../core/services/results-tracking';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -23,8 +24,14 @@ import { ASTWithSource, parseTemplate, TmplAstElement, TmplAstIfBlock, TmplAstNo
 
 type FeedbackQuestion = Extract<AnyQuestion, { correctAnswers: string[] }>;
 
+type ChoiceQuestion = Exclude<AnyQuestion, LabelingQuestion>;
+
 function isFeedbackQuestion(question: AnyQuestion): question is FeedbackQuestion {
     return 'correctAnswers' in question;
+}
+
+function isLabelingQuestion(question: AnyQuestion): question is LabelingQuestion {
+    return 'correctLabels' in question;
 }
 
 const PAGES: { directory: string; prefix: string; questions: Record<string, AnyQuestion> }[] = [
@@ -35,13 +42,15 @@ const PAGES: { directory: string; prefix: string; questions: Record<string, AnyQ
     { directory: 'p5-precession', prefix: 'p5-precession-', questions: p5Questions },
     { directory: 'p6-nutation', prefix: 'p6-nutation-', questions: p6Questions },
     { directory: 'p7-measurement', prefix: 'p7-measurement-', questions: p7Questions },
-    // p8-deepening joins once its matching task has questions
+    { directory: 'p8-deepening', prefix: 'p8-deepening-', questions: p8Questions },
 ];
 
 const definitions = PAGES.flatMap(page => Object.values(page.questions));
 const registryIds = PAGE_REGISTRY.flatMap(page => page.blocks)
     .filter(block => block.type === 'question').map(block => block.questionId);
 const multipleChoiceQuestions = definitions.filter(isFeedbackQuestion);
+const choiceQuestions = definitions.filter((q): q is ChoiceQuestion => !isLabelingQuestion(q));
+const labelingQuestions = definitions.filter(isLabelingQuestion);
 
 function templateQuestionIds(page: typeof PAGES[number]): string[] {
     const filename = join(process.cwd(), 'src/app/features/learning_features', page.directory, `${page.directory}.html`);
@@ -85,7 +94,22 @@ describe('learning-question data', () => {
         expect([...registryIds].sort()).toEqual([...templateIds].sort());
     });
 
-    it.each(definitions)('$questionId has a nontrivial, valid answer set and formal feedback', question => {
+    it.each(labelingQuestions)('$questionId labels every marker, with a distractor and a hint per marker', question => {
+        expect(question.correctLabels.length).toBeGreaterThan(1);
+        expect(question.options.length).toBeGreaterThan(question.correctLabels.length);
+        expect(new Set(question.options.map(o => o.value)).size).toBe(question.options.length);
+        expect(question.correctLabels.every(v => question.options.some(o => o.value === v))).toBe(true);
+        expect(question.markerFeedback.length).toBe(question.correctLabels.length);
+        for (const hint of question.markerFeedback) {
+            expect(hint.trim()).not.toBe('');
+            expect(hint).not.toMatch(/\b(?:richtig|falsch|korrekt)\b/i);
+        }
+        // plain text in <option>: no TeX, no HTML, no combining arrows or Unicode sub-/superscripts (they render unreliably)
+        for (const option of question.options) expect(option.label).not.toMatch(/[$<>\\⃐-⃿⁰-₟]/);
+        expect(question.successMessage).not.toMatch(/Falsche Wahl|Versuchen Sie es nochmals|Völlig richtig|\b(?:du|dein|dich|dir)\b/i);
+    });
+
+    it.each(choiceQuestions)('$questionId has a nontrivial, valid answer set and formal feedback', question => {
         const correct = 'correctAnswers' in question ? question.correctAnswers : [question.correctAnswer];
         expect(correct.length).toBeGreaterThan(0);
         expect(correct.length).toBeLessThan(question.options.length);

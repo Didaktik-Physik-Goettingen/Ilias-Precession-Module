@@ -1,27 +1,157 @@
 <div class="container">
     <div class="card">
         @if (currentView === 'deepening1') {
-            <h1>Vertiefung (1/2)</h1>
-            <p class="page-subheadline">Freies Experimentieren</p>
+            <h1>Vertiefung (1/3)</h1>
+            <p class="page-subheadline">Die Erde als Kreisel</p>
+        } @else if (currentView === 'deepening2') {
+            <h1>Vertiefung (2/3)</h1>
+            <p class="page-subheadline">Der wandernde Himmelspol</p>
         } @else {
-            <h1>Vertiefung (2/2)</h1>
-            <p class="page-subheadline">Kreisel im Kosmos</p>
+            <h1>Vertiefung (3/3)</h1>
+            <p class="page-subheadline">Nutation der Erdachse</p>
         }
 
-        <!-- Content sections -->
         <div class="content">
             @if (currentView === 'deepening1') {
                 <div>
                     <p [innerHTML]="deepeningText1a"></p>
+                    <div class="full-width-image-container">
+                        <img src="assets/images/p8_deepening/erde_wulst.svg" alt="Erde mit überhöhtem Äquatorwulst über der Bahnebene, Erdachse um 23,4 Grad gegen die Senkrechte zur Bahnebene geneigt, Sonne links" class="full-width-image">
+                        <p class="image-description" [innerHTML]="deepeningText1b"></p>
+                    </div>
 
-                    <app-sim-embed presetId="free-lab"></app-sim-embed>
+                    <p [innerHTML]="deepeningText1c"></p>
+
+                    <app-single-choice
+                        [questionId]="question1.questionId"
+                        [question]="question1.question"
+                        [options]="question1.options"
+                        [correctAnswer]="question1.correctAnswer"
+                        [answerFeedback]="question1.answerFeedback"
+                        [containerId]="question1.containerId"
+                        [successMessage]="question1.successMessage"
+                        [incorrectMessage]="question1.incorrectMessage"
+                        (onAnswerEvaluated)="onQuestion1Answered($event)">
+                    </app-single-choice>
+
+                    <p [innerHTML]="deepeningText1d"></p>
+
+                    <app-labeling
+                        [questionId]="question2.questionId"
+                        [question]="question2.question"
+                        [imageSrc]="question2.imageSrc"
+                        [imageAlt]="question2.imageAlt"
+                        [options]="question2.options"
+                        [correctLabels]="question2.correctLabels"
+                        [markerFeedback]="question2.markerFeedback"
+                        [containerId]="question2.containerId"
+                        [successMessage]="question2.successMessage"
+                        (onAnswerEvaluated)="onQuestion2Answered($event)">
+                    </app-labeling>
+
+                    <!-- the labelled figure only once the labelling task is solved: it is its solution -->
+                    @if (isCorrect2) {
+                        <div class="full-width-image-container">
+                            <img src="assets/images/p8_deepening/erde_vektoren.svg" alt="Dieselbe Abbildung beschriftet: F1 am näheren Teil des Wulstes, F2 am ferneren, L entlang der Erdachse, D in der Bahnebene zum Betrachter hin" class="full-width-image">
+                            <p class="image-description" [innerHTML]="deepeningText1e"></p>
+                        </div>
+                    }
+
+                    <p [innerHTML]="deepeningText1f"></p>
+
+                    <app-image-choice
+                        [questionId]="question3.questionId"
+                        [question]="question3.question"
+                        [options]="question3.options"
+                        [correctAnswers]="question3.correctAnswers"
+                        [answerFeedback]="question3.answerFeedback"
+                        [containerId]="question3.containerId"
+                        [successMessage]="question3.successMessage"
+                        [incompleteMessage]="question3.incompleteMessage"
+                        [incorrectMessage]="question3.incorrectMessage"
+                        (onAnswerEvaluated)="onQuestion3Answered($event)">
+                    </app-image-choice>
+
+                    <div class="learning-lamp">
+                        <div class="learning-lamp-text" [innerHTML]="deepeningText1g"></div>
+                    </div>
                 </div>
             }
 
             @if (currentView === 'deepening2') {
-                <!-- placeholder text; the matching task (images ↔ concepts) follows later -->
                 <div>
-                    <div [innerHTML]="deepeningText2a"></div>
+                    <p [innerHTML]="deepeningText2a"></p>
+
+                    <app-labeling
+                        [questionId]="question4.questionId"
+                        [question]="question4.question"
+                        [imageSrc]="question4.imageSrc"
+                        [imageAlt]="question4.imageAlt"
+                        [options]="question4.options"
+                        [correctLabels]="question4.correctLabels"
+                        [markerFeedback]="question4.markerFeedback"
+                        [containerId]="question4.containerId"
+                        [successMessage]="question4.successMessage"
+                        (onAnswerEvaluated)="onQuestion4Answered($event)">
+                    </app-labeling>
+
+                    <p [innerHTML]="deepeningText2b"></p>
+                    <app-pole-sky></app-pole-sky>
+
+                    <p [innerHTML]="deepeningText2c"></p>
+
+                    <app-single-choice
+                        [questionId]="question5.questionId"
+                        [question]="question5.question"
+                        [options]="question5.options"
+                        [correctAnswer]="question5.correctAnswer"
+                        [answerFeedback]="question5.answerFeedback"
+                        [containerId]="question5.containerId"
+                        [successMessage]="question5.successMessage"
+                        [incorrectMessage]="question5.incorrectMessage"
+                        (onAnswerEvaluated)="onQuestion5Answered($event)">
+                    </app-single-choice>
+                </div>
+            }
+
+            @if (currentView === 'deepening3') {
+                <div>
+                    <p [innerHTML]="deepeningText3a"></p>
+                    <div class="full-width-image-container figure-wide">
+                        <img src="assets/images/p8_deepening/mondbahn.svg" alt="Zwei Seitenansichten: Bahnebene der Erde waagrecht, Äquator um 23,4 Grad geneigt, Mondbahn um 5 Grad geneigt; links 18,3 Grad zwischen Mondbahn und Äquator, rechts 9,3 Jahre später 28,6 Grad" class="full-width-image">
+                        <p class="image-description" [innerHTML]="deepeningText3b"></p>
+                    </div>
+
+                    <p [innerHTML]="deepeningText3c"></p>
+
+                    <app-image-choice
+                        [questionId]="question6.questionId"
+                        [question]="question6.question"
+                        [options]="question6.options"
+                        [correctAnswers]="question6.correctAnswers"
+                        [answerFeedback]="question6.answerFeedback"
+                        [containerId]="question6.containerId"
+                        [successMessage]="question6.successMessage"
+                        [incompleteMessage]="question6.incompleteMessage"
+                        [incorrectMessage]="question6.incorrectMessage"
+                        (onAnswerEvaluated)="onQuestion6Answered($event)">
+                    </app-image-choice>
+
+                    <p [innerHTML]="deepeningText3d"></p>
+                    <app-pole-sky [nutation]="true"></app-pole-sky>
+
+                    <app-multiple-choice
+                        [questionId]="question7.questionId"
+                        [question]="question7.question"
+                        [options]="question7.options"
+                        [correctAnswers]="question7.correctAnswers"
+                        [answerFeedback]="question7.answerFeedback"
+                        [containerId]="question7.containerId"
+                        [successMessage]="question7.successMessage"
+                        [incompleteMessage]="question7.incompleteMessage"
+                        [incorrectMessage]="question7.incorrectMessage"
+                        (onAnswerEvaluated)="onQuestion7Answered($event)">
+                    </app-multiple-choice>
                 </div>
             }
         </div>

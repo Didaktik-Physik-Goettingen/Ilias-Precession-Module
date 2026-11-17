@@ -276,10 +276,10 @@ export const SIM_PRESETS: Record<string, SimEmbedConfig> = {
         gate: (runs) => distinct(runs.map(r => r.startMode)) >= 2,
         gateHint: 'Weiter geht es, sobald Sie den Kreisel einmal losgelassen und einmal geführt gestartet haben.',
     },
-    // Vertiefung: the lab experiment as the students will see it, every parameter, no helpers, no gate
+    // Messstrategie 4/4: the lab experiment as the students will see it, every parameter, no helpers, no gate
     'free-lab': {
         id: 'free-lab',
-        page: '/learning/p8-deepening?page=1',
+        page: '/learning/p7-measurement?page=4',
         learningTarget: 'Freies Experimentieren am Versuchskreisel, ohne Pfeile, Kegel und Beschriftungen.',
         preset: {
             apparatus: 'lab', rpm: 400, addOnMassGrams: 30, theta0Deg: 90, startMode: 'guided',

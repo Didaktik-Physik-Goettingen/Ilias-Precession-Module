@@ -64,6 +64,16 @@ export const measureText3a = `
 `;
 
 export const measureText3b = `
-    Damit sind Sie gut vorbereitet. Auf der nächsten Seite können Sie den Versuch in der Simulation noch einmal frei ausprobieren
-    und finden eine Zusammenfassung Ihres Lernwegs.
+    Damit sind Sie gut vorbereitet. Auf der nächsten Seite können Sie den Versuch in der Simulation noch einmal frei ausprobieren.
+`;
+
+
+// ── Page 4: Freies Experimentieren ─────────────────────────────────────────
+
+export const measureText4a = `
+    Sie haben sich mit dem Versuchsaufbau, der Physik des Kreisels und der Messstrategie vertraut gemacht.
+    Hier können Sie den Versuch noch einmal frei ausprobieren: am Versuchskreisel, ohne eingeblendete Pfeile,
+    Kegel und Beschriftungen, so wie Sie ihn im Praktikum sehen werden. Drehzahl, Zusatzgewicht und Neigung
+    lassen sich beliebig einstellen. Die Lagerreibung bremst das Rad ab; bei 1&nbsp;× verliert es etwa so schnell an Winkelgeschwindigkeit $\omega_R$ wie im Versuch.
+    „Stoß“ stößt die Achse an, „Zurücksetzen“ startet den Kreisel neu.
 `;

@@ -265,20 +265,57 @@ export const PAGE_REGISTRY: PageDefinition[] = [
             { type: 'text', html: p7Content.measureText3b },
         ],
     },
+    {
+        route: '/learning/p7-measurement', page: 4,
+        title: 'Messstrategie und Fehlerquellen', subtitle: 'Freies Experimentieren',
+        blocks: [
+            { type: 'text', html: p7Content.measureText4a },
+        ],
+    },
 
     // ── Vertiefung ───────────────────────────────────────────────────────
     {
         route: '/learning/p8-deepening', page: 1,
-        title: 'Vertiefung', subtitle: 'Freies Experimentieren',
+        title: 'Vertiefung', subtitle: 'Die Erde als Kreisel',
         blocks: [
-            { type: 'text', html: p8Content.deepeningText1a },
+            { type: 'text',  html: p8Content.deepeningText1a },
+            { type: 'image', src: 'assets/images/p8_deepening/erde_wulst.svg',
+              alt: 'Erde mit überhöhtem Äquatorwulst', caption: p8Content.deepeningText1b },
+            { type: 'text',  html: p8Content.deepeningText1c },
+            { type: 'question', questionId: 'p8-deepening-1-kugel' },
+            { type: 'text',  html: p8Content.deepeningText1d },
+            { type: 'image', src: 'assets/images/p8_deepening/erde_beschriften.svg',
+              alt: 'Erde mit nummerierten Pfeilen 1 bis 4' },
+            { type: 'question', questionId: 'p8-deepening-2-wulst-beschriften' },
+            { type: 'image', src: 'assets/images/p8_deepening/erde_vektoren.svg',
+              alt: 'Kräfte der Sonne am Äquatorwulst, Drehimpuls und Drehmoment', caption: p8Content.deepeningText1e },
+            { type: 'text',  html: p8Content.deepeningText1f },
+            { type: 'question', questionId: 'p8-deepening-3-achsenbewegung' },
+            { type: 'text',  html: p8Content.deepeningText1g, style: 'lamp' },
         ],
     },
     {
         route: '/learning/p8-deepening', page: 2,
-        title: 'Vertiefung', subtitle: 'Kreisel im Kosmos',
+        title: 'Vertiefung', subtitle: 'Der wandernde Himmelspol',
         blocks: [
-            { type: 'text', html: p8Content.deepeningText2a },
+            { type: 'text',  html: p8Content.deepeningText2a },
+            { type: 'image', src: 'assets/images/p8_deepening/himmelspol_beschriften.svg',
+              alt: 'Himmelskarte um den Ekliptikpol mit nummerierten Stellen 1 bis 4' },
+            { type: 'question', questionId: 'p8-deepening-4-himmelspol' },
+            { type: 'text',  html: p8Content.deepeningText2c },
+            { type: 'question', questionId: 'p8-deepening-5-langsam' },
+        ],
+    },
+    {
+        route: '/learning/p8-deepening', page: 3,
+        title: 'Vertiefung', subtitle: 'Nutation der Erdachse',
+        blocks: [
+            { type: 'text',  html: p8Content.deepeningText3a },
+            { type: 'image', src: 'assets/images/p8_deepening/mondbahn.svg',
+              alt: 'Mondbahn und Äquator von der Seite', caption: p8Content.deepeningText3b },
+            { type: 'text',  html: p8Content.deepeningText3c },
+            { type: 'question', questionId: 'p8-deepening-6-polbahn' },
+            { type: 'question', questionId: 'p8-deepening-7-erzwungen' },
         ],
     },
 ];

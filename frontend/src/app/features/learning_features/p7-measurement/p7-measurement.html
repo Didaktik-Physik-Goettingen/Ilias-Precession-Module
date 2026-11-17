@@ -1,14 +1,17 @@
 <div class="container">
     <div class="card">
         @if (currentView === 'measure1') {
-            <h1>Messstrategie (1/3)</h1>
+            <h1>Messstrategie (1/4)</h1>
             <p class="page-subheadline">Reibung</p>
         } @else if (currentView === 'measure2') {
-            <h1>Messstrategie (2/3)</h1>
+            <h1>Messstrategie (2/4)</h1>
             <p class="page-subheadline">Die Präzession sauber starten</p>
-        } @else {
-            <h1>Messstrategie (3/3)</h1>
+        } @else if (currentView === 'measure3') {
+            <h1>Messstrategie (3/4)</h1>
             <p class="page-subheadline">Weitere Fehlerquellen</p>
+        } @else {
+            <h1>Messstrategie (4/4)</h1>
+            <p class="page-subheadline">Freies Experimentieren</p>
         }
 
         <!-- Content sections -->
@@ -92,6 +95,14 @@
                     </app-multiple-choice>
 
                     <p [innerHTML]="measureText3b"></p>
+                </div>
+            }
+
+            @if (currentView === 'measure4') {
+                <div>
+                    <p [innerHTML]="measureText4a"></p>
+
+                    <app-sim-embed presetId="free-lab"></app-sim-embed>
                 </div>
             }
         </div>

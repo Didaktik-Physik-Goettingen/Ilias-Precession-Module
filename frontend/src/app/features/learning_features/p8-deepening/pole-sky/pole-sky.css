@@ -1,0 +1,90 @@
+:host {
+    display: block;
+}
+
+/* two figures side by side, stacked on phones; they keep their white plate like every module figure */
+.pole-sky-figures {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-top: 1.5rem;
+}
+
+.pole-sky-svg {
+    flex: 1 1 0;
+    min-width: 0;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* same layout rules as the sim panel (sim-panel.css): slider row, switch, readout, buttons */
+.pole-sky-panel {
+    margin-top: 0.75rem;
+    padding: 1.25rem 2rem;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.pole-sky-panel .sim-controls {
+    margin-bottom: 0;
+}
+
+.pole-sky-year {
+    max-width: none;
+}
+
+.pole-sky-year output {
+    font-variant-numeric: tabular-nums;
+}
+
+.pole-sky-panel .sim-toolbar {
+    padding: 0 0 0.5rem;
+}
+
+/* off is neutral grey, as in the sim panel */
+.pole-sky-switch span {
+    background-color: var(--grau-60);
+}
+
+.pole-sky-switch input:checked + span {
+    background-color: var(--switch-on);
+}
+
+.pole-sky-readout {
+    text-align: center;
+    margin: 0 0 1rem;
+}
+
+.pole-sky-buttons {
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.pole-sky-buttons .eval-btn {
+    flex: 1 1 110px;
+    max-width: 220px;
+}
+
+.pole-sky-hint {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0 0;
+}
+
+@media (max-width: 600px) {
+    .pole-sky-figures {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* in a column a zero flex basis would be a zero height */
+    .pole-sky-svg {
+        flex: none;
+        width: 100%;
+    }
+
+    .pole-sky-panel {
+        padding: 1rem;
+    }
+}

@@ -4,7 +4,7 @@ Lernmodul zum Experiment "Kreiselpräzession" (Versuch 4) des Grundpraktikums zu
 
 Students reach the module through ILIAS. It prepares them for the lab session in one linear path: the setup, the physics of rotation (angular velocity, angular momentum and torque as vectors), the physical pendulum, the gyroscope, precession, nutation and the measurement strategy. It ends with the experiment guide and a personal summary of the learning path.
 
-<!-- The infrastructure (ILIAS bridge, PHP API, MySQL tracking, summary and HTML report) is taken from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module) of the same group. Compared to it, this module has one linear path instead of two strands, no decision pages and no scored tests. A 3D Unity simulation of the gyroscope (separate repository `ilias-precession-simulation`) is embedded on seven learning pages, one of them (Vertiefung) for free experimenting. -->
+<!-- The infrastructure (ILIAS bridge, PHP API, MySQL tracking, summary and HTML report) is taken from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module) of the same group. Compared to it, this module has one linear path instead of two strands, no decision pages and no scored tests. A 3D Unity simulation of the gyroscope (separate repository `ilias-precession-simulation`) is embedded on seven learning pages, one of them (Messstrategie 4/4) for free experimenting. -->
 
 The project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4, with strong help of Claude (Opus).
 
@@ -84,7 +84,7 @@ design_notes.md                                 // decisions and their reasons, 
             │   ├── sim-panel/                  // control panel below the sim: sliders, switches, buttons, readouts
             │   └── evaluation/                 // retryable Q&A types for learning pages
             │       │   question.types.ts
-            │       └── single-choice/ multiple-choice/ multiple-choice-image/ image-choice/
+            │       └── single-choice/ multiple-choice/ multiple-choice-image/ image-choice/ labeling/
             │
             └── features/
                 ├── home/                       // start page
@@ -304,7 +304,7 @@ One linear path of five chapters on eight routes, followed by the target page. T
 
 </details>
 
-- **p7-measurement** → `/learning/p7-measurement` — Messstrategie und Fehlerquellen (3 pages)
+- **p7-measurement** → `/learning/p7-measurement` — Messstrategie und Fehlerquellen (4 pages; page 4 is the free simulation `free-lab`)
 
 <details>
 <summary>Questions (4)</summary>
@@ -316,7 +316,20 @@ One linear path of five chapters on eight routes, followed by the target page. T
 
 </details>
 
-- **p8-deepening** → `/learning/p8-deepening` — Vertiefung (2 pages): the free simulation (`free-lab`, see below), then "Kreisel im Kosmos", for now a placeholder text on precession and angular momentum in astrophysics; a matching task (images ↔ concepts) is planned. No questions yet, so no questions file and no entry in the question spec's `PAGES`.
+- **p8-deepening** → `/learning/p8-deepening` — Vertiefung: the Earth as a gyroscope (3 pages: Die Erde als Kreisel, Der wandernde Himmelspol, Nutation der Erdachse). Figures from `tools/make_figures.py`; two labelling tasks (`app-labeling`) and the year slider `app-pole-sky` (pages 2 and 3, on page 3 with a nutation switch; star data in `pole-sky/sky.ts`, the same as in `make_figures.py`)
+
+<details>
+<summary>Questions (7)</summary>
+
+  - `p8-deepening-1-kugel`
+  - `p8-deepening-2-wulst-beschriften`
+  - `p8-deepening-3-achsenbewegung`
+  - `p8-deepening-4-himmelspol`
+  - `p8-deepening-5-langsam`
+  - `p8-deepening-6-polbahn`
+  - `p8-deepening-7-erzwungen`
+
+</details>
 
 
 ### Target Feature
@@ -338,7 +351,7 @@ Every panel has the page's sliders in the first row, switches (only for helpers)
 | `p5-precession` | p5-precession (3/3) | ω_P ∝ 1/ω_R, independent of θ; readouts ω_R, ω_P | Drehzahl, Zusatzgewicht, Neigung | 2 rpm + 2 θ₀ |
 | `p6-nutation` | p6-nutation (3/3) | nutation of the balanced gyroscope after a push, the three cones | Drehzahl, Zeitlupe, Stoß; one switch per cone (ω⃗ with Rast-/Gangpolkegel) | push at 2 rpm |
 | `p7-release` | p7-measurement (2/3) | released vs. guided start | Loslassen, Geführt starten | both modes |
-| `free-lab` | p8-deepening 1/2 | free experimenting with the lab gyroscope, no helpers or readouts | Drehzahl, Zusatzgewicht, Neigung, Stoßstärke (from sim v1.3.0), Lagerreibung (slider, × the lab value), Zeitlupe, Stoß | none |
+| `free-lab` | p7-measurement 4/4 | free experimenting with the lab gyroscope, no helpers or readouts | Drehzahl, Zusatzgewicht, Neigung, Stoßstärke (from sim v1.3.0), Lagerreibung (slider, × the lab value), Zeitlupe, Stoß | none |
 
 #### Updating the simulation
 

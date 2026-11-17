@@ -1,0 +1,40 @@
+<div class="evaluation-container" [class]="containerId" [class.disabled]="isCorrect">
+    <div class="evaluation-content">
+        <h3 class="evaluation-question" [innerHTML]="question"></h3>
+        @if (hasRevisedQuestion) {
+            <p role="status">Diese Aufgabe wurde überarbeitet. Ihre frühere Antwort wird nicht auf die neue Fassung übertragen. Bitte bearbeiten Sie die Aufgabe erneut.</p>
+        }
+
+        <div class="labeling-figure">
+            <img [src]="imageSrc" [alt]="imageAlt">
+        </div>
+
+        <div class="labeling-rows">
+            @for (marker of markers; track marker; let k = $index) {
+                <label class="labeling-row"
+                       [class.labeling-row--correct]="markerState[k] === true"
+                       [class.labeling-row--wrong]="markerState[k] === false">
+                    <span class="labeling-marker" aria-hidden="true">{{ marker }}</span>
+                    <span class="visually-hidden">Markierung {{ marker }}</span>
+                    <select [value]="chosen[k]" [disabled]="isCorrect" (change)="select(k, $any($event.target).value)">
+                        <option value="" [selected]="chosen[k] === ''">– bitte wählen –</option>
+                        @for (option of shuffledOptions; track option.value) {
+                            <option [value]="option.value" [selected]="chosen[k] === option.value">{{ option.label }}</option>
+                        }
+                    </select>
+                </label>
+            }
+        </div>
+
+        <button class="eval-btn evaluation-submit-btn" (click)="evaluateAnswer()" [disabled]="isCorrect">
+            Auswerten
+        </button>
+
+        <div class="evaluation-result"
+             [class.show]="showResult"
+             [class.correct]="isCorrect"
+             [class.incorrect]="!isCorrect">
+            <p [innerHTML]="resultMessage"></p>
+        </div>
+    </div>
+</div>

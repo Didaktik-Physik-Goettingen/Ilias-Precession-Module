@@ -432,4 +432,334 @@ for k, (col, op, name, desc) in enumerate([(LCOL, None, 'L', 'Drehimpulsachse (r
         b += (f'<text x="{col_x + 26}" y="{y}" font-size="14" {FONT}><tspan fill="{col}" font-weight="bold">{name}:</tspan>'
               f'<tspan fill="{GRAPH}"> {desc}</tspan></text>')
 write('p6_nutation/kreiselkegel.svg', svg(W, H, b))
+
+
+# ══ p8: the Earth as a gyroscope ═══════════════════════════════════════════
+# World frame: x away from the Sun (the Sun lies far along −x), y into the page, z = normal of the orbital
+# plane (ecliptic). Northern winter solstice: the north end of the axis tilts away from the Sun.
+# The Sun pulls the near half of the equatorial bulge (above the ecliptic) harder than the far half
+# (below it); with r × F the torque points along −y, towards the viewer, for every position of the Sun
+# (the opposite solstice gives the mirror image, the same D). L along the north axis, so dL = D dt moves
+# the north end towards −y: clockwise seen from ecliptic north, against the Earth's rotation (westward).
+EPS = math.radians(23.44)
+NAX = (math.sin(EPS), 0, math.cos(EPS))           # north end of the axis
+EQ_NEAR = (-math.cos(EPS), 0, math.sin(EPS))      # equator point nearest the Sun (above the ecliptic)
+EQ_FAR = (math.cos(EPS), 0, -math.sin(EPS))
+D_DIR = (0, -1, 0)                                # torque, from r × F (checked below)
+EARTH_FILL, EARTH_BULGE = 'rgb(223,231,240)', 'rgb(190,203,219)'
+FLAT = 0.74                                       # polar / equatorial radius, strongly exaggerated (Earth: 0.997)
+
+_t = add(cross3(EQ_NEAR, (-1.6, 0, 0)), cross3(EQ_FAR, (-1.0, 0, 0)))   # near pull stronger than far pull
+assert _t[1] < 0 and abs(_t[0]) < 1e-9 and abs(_t[2]) < 1e-9, _t
+
+
+def earth_frame(az=12, el=27, cx=330, cy=255, scale=125):
+    return projector(cx, cy, scale, az, el), (math.sin(math.radians(az)) * -math.cos(math.radians(el)),
+                                             -math.cos(math.radians(az)) * math.cos(math.radians(el)),
+                                             math.sin(math.radians(el)))
+
+
+def _scale_of(P):
+    # orthographic: the image of a unit vector in the image plane has length = scale; x and y span it with z
+    o = P((0, 0, 0))
+    vx, vy, vz = [(P(e)[0] - o[0], P(e)[1] - o[1]) for e in ((1, 0, 0), (0, 1, 0), (0, 0, 1))]
+    return math.sqrt((vx[0] ** 2 + vy[0] ** 2 + vz[0] ** 2))   # row norm of the projection matrix
+
+
+def earth(P, view, a=NAX):
+    """Oblate Earth (bulge shaded between the ellipsoid and the inscribed sphere), equator, axis line."""
+    ax, u, v = basis(a)
+    surf = []
+    for i in range(0, 37):
+        th = math.pi * i / 36
+        for j in range(0, 72):
+            ph = 2 * math.pi * j / 72
+            p = add(mul(ax, FLAT * math.cos(th)), add(mul(u, math.sin(th) * math.cos(ph)), mul(v, math.sin(th) * math.sin(ph))))
+            surf.append(P(p))
+    o = P((0, 0, 0))
+    scale = _scale_of(P)
+    r_in = FLAT * scale
+    out = polygon(convex_hull(surf), EARTH_BULGE, NAVY, 2)
+    out += f'<circle cx="{o[0]:.1f}" cy="{o[1]:.1f}" r="{r_in:.1f}" fill="{EARTH_FILL}"/>'
+    eq = circle3d((0, 0, 0), ax, 1.0, n=144)
+    front = [P(p) if sum(i * j for i, j in zip(p, view)) >= 0 else None for p in eq]
+    seg, segs = [], []
+    for q in front + [front[0]]:
+        if q is None:
+            if len(seg) > 1: segs.append(seg)
+            seg = []
+        else:
+            seg.append(q)
+    if len(seg) > 1: segs.append(seg)
+    for s in segs:
+        out += polyline(s, NAVY, 1.8)
+    out += polyline([P(p) for p in eq], NAVY, 1.2, '4 5', opacity=0.6)
+    return out, r_in
+
+
+def ecliptic_plane(P, r=2.05):
+    pts = [P(p) for p in circle3d((0, 0, 0), (0, 0, 1), r)]
+    return polygon(pts, 'rgb(240,242,245)', GREY, 1.4)
+
+
+def through_surface(P, d, exit_len, length, col, w):
+    """Vector from the Earth's centre: dashed inside the Earth, solid from the surface on."""
+    o, s_, e = P((0, 0, 0)), P(mul(d, exit_len)), P(mul(d, length))
+    return line(*o, *s_, col, w * 0.45, '5 4') + arrow(*s_, *e, col, w)
+
+
+def marker(x, y, n):
+    """Numbered marker of a labelling task."""
+    return (f'<circle cx="{x:.1f}" cy="{y:.1f}" r="15" fill="white" stroke="{NAVY}" stroke-width="2.4"/>'
+            + text(x, y + 6.5, str(n), NAVY, 18, 'middle', 'normal', 'bold'))
+
+
+def sun_hint(P, y):
+    x0 = P((-2.2, 0, 0))[0]
+    return arrow(x0 + 70, y, x0 - 10, y, GREY, 2.5) + text(x0 - 10, y - 12, 'Richtung Sonne', GREY, 16, 'start', 'normal', 'bold')
+
+
+def earth_scene(P, view, axis_len=1.75, tilt_label=True):
+    """Ecliptic plane, the Earth, the axis with the vertical and the tilt angle."""
+    o = P((0, 0, 0))
+    b = ecliptic_plane(P)
+    b += line(*P((0, 0, -1.25)), *P((0, 0, 2.0)), GREY, 1.6, '7 6')
+    e, _ = earth(P, view)
+    b += e
+    b += line(*P(mul(NAX, -1.25)), *P(mul(NAX, -FLAT)), GRAPH, 2.4)
+    b += line(*P(mul(NAX, FLAT)), *P(mul(NAX, axis_len)), GRAPH, 2.4)
+    tarc = [P(mul((math.sin(t), 0, math.cos(t)), 1.45)) for t in (EPS * k / 20 for k in range(21))]
+    if tilt_label:
+        b += polyline(tarc, NAVY, 1.8)
+        b += text(tarc[0][0] - 8, tarc[0][1] + 4, '23,4°', NAVY, 16, 'end', 'normal', 'bold')
+    b += f'<circle cx="{o[0]:.1f}" cy="{o[1]:.1f}" r="4" fill="{NAVY}"/>'
+    return b
+
+
+# ── E1a: the Earth's geometry (no forces, no vectors) ──
+P, view = earth_frame()
+W, H = 640, 470
+b = earth_scene(P, view)
+b += sun_hint(P, H - 30)
+lab = P(mul(NAX, 1.75))
+b += text(lab[0] + 10, lab[1] + 4, 'Erdachse', GRAPH, 16, 'start', 'normal', 'bold')
+top = P((0, 0, 2.0))
+b += text(top[0] - 10, top[1] + 4, 'Senkrechte zur Bahnebene', GREY, 15, 'end', 'normal', 'normal')
+qn = P(mul(EQ_NEAR, 0.93))
+b += line(qn[0] - 4, qn[1] - 4, qn[0] - 70, qn[1] - 50, GREY, 1.4) + text(qn[0] - 74, qn[1] - 56, 'Äquatorwulst', NAVY, 16, 'end', 'normal', 'bold')
+pl = P((1.3, -1.6, 0))
+b += text(pl[0] + 10, pl[1] + 22, 'Bahnebene', GREY, 15, 'start', 'normal', 'normal')
+write('p8_deepening/erde_wulst.svg', svg(W, H, b))
+
+
+def earth_vectors(numbered):
+    """E1b/E1c: pulls on the two halves of the bulge, lever arms, L and D.
+    numbered: every quantity to name is graphite and carries a marker (labelling task)."""
+    P, view = earth_frame()
+    b = earth_scene(P, view, axis_len=1.25)
+    b += sun_hint(P, 440)
+    o = P((0, 0, 0))
+    qn, qf = P(EQ_NEAR), P(EQ_FAR)
+    fn_end, ff_end = P(add(EQ_NEAR, (-0.75, 0, 0))), P(add(EQ_FAR, (-0.42, 0, 0)))
+    # lever arms: thin, always given
+    b += line(*o, *qn, GRAPH, 1.6, '5 4') + line(*o, *qf, GRAPH, 1.6, '5 4')
+    L_end, D_end = P(mul(NAX, 1.9)), P(mul(D_DIR, 1.75))
+    cl = (lambda c: GRAPH) if numbered else (lambda c: c)
+    b += arrow(*qn, *fn_end, cl(GRAPH), 4.5)
+    b += arrow(*qf, *ff_end, cl(GRAPH), 4.5)
+    b += through_surface(P, NAX, FLAT, 1.9, cl(LCOL), 6)
+    b += through_surface(P, D_DIR, 1.0, 1.75, cl(DCOL), 5.5)
+    if numbered:
+        b += marker(fn_end[0] - 22, fn_end[1] - 6, 1)
+        b += marker(L_end[0] + 22, L_end[1] + 6, 2)
+        b += marker(qf[0] + 26, qf[1] + 4, 3)
+        b += marker(D_end[0] - 24, D_end[1] + 6, 4)
+    else:
+        b += vec_label((qn[0] + fn_end[0]) / 2 - 4, (qn[1] + fn_end[1]) / 2 - 16, 'F', GRAPH, 22, sub='1', anchor='middle')
+        b += vec_label(qf[0] + 12, qf[1] + 10, 'F', GRAPH, 22, sub='2')
+        b += vec_label(L_end[0] + 12, L_end[1] + 10, 'L', LCOL, 24)
+        b += vec_label(D_end[0] + 22, D_end[1] + 2, 'D', DCOL, 24, text_col=DTEXT)
+    rn = ((o[0] + qn[0]) / 2, (o[1] + qn[1]) / 2)
+    b += vec_label(rn[0] - 6, rn[1] - 10, 'r', GRAPH, 19, sub='1')
+    rf = ((o[0] + qf[0]) / 2, (o[1] + qf[1]) / 2)
+    b += vec_label(rf[0] + 4, rf[1] - 10, 'r', GRAPH, 19, sub='2')
+    return b
+
+
+write('p8_deepening/erde_beschriften.svg', svg(640, 470, earth_vectors(True)))
+write('p8_deepening/erde_vektoren.svg', svg(640, 470, earth_vectors(False)))
+
+
+# ── Q3: where does the north end of the axis move? (same scene, L and D given) ──
+def precession_option(kind):
+    """Top view, looking down from ecliptic north (screen up = +y, so D along −y points down).
+    The red arrow shows where the north end of L moves, the faint dashed arrow where L points afterwards.
+    Only 'toward-D' follows dL = D dt: clockwise, against the Earth's rotation (counter-clockwise from north)."""
+    W = H = 420
+    P = projector(195, 205, 92, 0, 90)
+    view = (0, 0, 1)
+    Lf = 3.0                                         # long enough that L's horizontal part leaves the Earth
+    tip = mul(NAX, Lf)
+    o = P((0, 0, 0))
+    b = f'<circle cx="{o[0]:.1f}" cy="{o[1]:.1f}" r="{1.85 * 92:.1f}" fill="rgb(240,242,245)" stroke="{GREY}" stroke-width="1.4"/>'
+    e, _ = earth(P, view)
+    b += e
+    b += polyline([P((tip[0] * math.cos(a), tip[0] * math.sin(a), 0)) for a in (2 * math.pi * k / 144 for k in range(145))],
+                  PCOL, 1.6, '6 5', opacity=0.7)
+    if kind in ('toward-D', 'away-from-D'):
+        sgn = -1 if kind == 'toward-D' else 1        # azimuth decreasing = clockwise = towards −y
+        az1 = sgn * math.radians(60)
+        new = (tip[0] * math.cos(az1), tip[0] * math.sin(az1), tip[2])
+        R = tip[0] * 1.13
+        path = [P((R * math.cos(a), R * math.sin(a), 0)) for a in (az1 * (0.1 + 0.8 * k / 30) for k in range(31))]
+    else:                                            # the axis rights itself: its horizontal part shrinks
+        new = None
+        path = [P((tip[0] * (1.0 - 0.6 * k / 30), 0.32, 0)) for k in range(31)]
+    if new:
+        b += arrow(*o, *P((new[0], new[1], 0)), LCOL, 2.4, '6 5')
+    b += through_surface(P, NAX, FLAT, Lf, LCOL, 6)
+    L_end = P(tip)
+    b += vec_label(L_end[0] + 10, L_end[1] + 8, 'L', LCOL, 24)
+    b += through_surface(P, D_DIR, 1.0, 1.75, DCOL, 5.5)
+    D_end = P(mul(D_DIR, 1.75))
+    b += vec_label(D_end[0] + 12, D_end[1] - 4, 'D', DCOL, 24, text_col=DTEXT)
+    b += polyline(path, PCOL, 3.4, end_arrow=True)
+    # the Earth's rotation around the north pole: counter-clockwise seen from above
+    npole = P(mul(NAX, FLAT))
+    spin = [(npole[0] + 30 * math.cos(t), npole[1] - 30 * math.sin(t)) for t in (math.radians(110 + 200 * k / 30) for k in range(31))]
+    b += polyline(spin, GRAPH, 2.6, end_arrow=True)
+    b += arrow(70, H - 22, 10, H - 22, GREY, 2.5) + text(10, H - 34, 'Richtung Sonne', GREY, 15, 'start', 'normal', 'bold')
+    return svg(W, H, b)
+
+
+for k, kind in {1: 'away-from-D', 2: 'toward-D', 3: 'upright'}.items():
+    write(f'p8_deepening/praezession_frage_{k}.svg', precession_option(kind))
+
+
+# ── E2: the sky around the ecliptic pole, as seen from the Earth (looking up) ──
+# Azimuthal equidistant map centred on the north ecliptic pole. Seen from inside the sphere the ecliptic
+# longitude λ grows clockwise; today's celestial pole (λ = 90°) is drawn at the bottom. The pole's λ falls
+# by 50.29″ per year, so on this map it moves counter-clockwise. Star positions: J2000, converted below.
+def to_ecl(ra_h, dec):
+    a, d = math.radians(ra_h * 15), math.radians(dec)
+    beta = math.asin(math.sin(d) * math.cos(EPS) - math.cos(d) * math.sin(EPS) * math.sin(a))
+    lam = math.atan2(math.sin(a) * math.cos(EPS) + math.tan(d) * math.sin(EPS), math.cos(a))
+    return math.degrees(lam) % 360, math.degrees(beta)
+
+
+STARS = {   # name: (RA in h, Dec in °), J2000
+    'Polarstern': (2.5303, 89.2642), 'Thuban': (14.0731, 64.3758), 'Wega': (18.6156, 38.7836),
+    'Deneb': (20.6906, 45.2803), 'Alderamin': (21.3097, 62.5856), 'Errai': (23.6558, 77.6325),
+    'Kochab': (14.8450, 74.1556),
+}
+PREC_RATE = 50.29 / 3600                         # ° per year
+STAR_LABEL = {'Polarstern': (12, 18, 'start'), 'Alderamin': (-10, 5, 'end'), 'Thuban': (10, -8, 'start'),
+              'Deneb': (-10, -8, 'end')}
+
+
+def sky_map(cx, cy, k):
+    def M(lam, beta):
+        rho = 90 - beta
+        phi = math.radians(-90 - (lam - 90))
+        return cx + k * rho * math.cos(phi), cy - k * rho * math.sin(phi)
+
+    def pole(year):
+        return M(90 - PREC_RATE * (year - 2000), 90 - math.degrees(EPS))
+    return M, pole
+
+
+def sky_base(M, cx, cy, k, star_names=STARS):
+    b = f'<circle cx="{cx}" cy="{cy}" r="{k * 35:.1f}" fill="rgb(236,240,246)" stroke="{GREY}" stroke-width="1.2"/>'
+    for r in (10, 20, 30):
+        b += f'<circle cx="{cx}" cy="{cy}" r="{k * r:.1f}" fill="none" stroke="{LIGHT}" stroke-width="1" stroke-dasharray="3 5"/>'
+    for name in star_names:
+        x, y = M(*to_ecl(*STARS[name]))
+        dx, dy, anc = STAR_LABEL.get(name, (9, -7, 'start'))
+        b += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="{NAVY}"/>'
+        b += text(x + dx, y + dy, name, NAVY, 15, anc, 'normal', 'normal')
+    b += f'<circle cx="{cx}" cy="{cy}" r="4" fill="{GRAPH}"/>'
+    b += text(cx + 8, cy + 18, 'Ekliptikpol', GRAPH, 14, 'start', 'normal', 'bold')
+    return b
+
+
+def pole_circle(pole, years=(2000, 2000 + 25800), width=2.2):
+    pts = [pole(years[0] + (years[1] - years[0]) * j / 288) for j in range(289)]
+    return polyline(pts, PCOL, width, '7 5', opacity=0.85)
+
+
+W, H = 600, 600
+cx, cy, k = 300, 300, 8.0
+M, pole = sky_map(cx, cy, k)
+b = sky_base(M, cx, cy, k)
+b += pole_circle(pole)
+# direction of motion, a short arc right after today's pole
+b += polyline([pole(2000 + 1200 + 2400 * j / 30) for j in range(31)], PCOL, 3.2, end_arrow=True)
+for n, year in [(1, 8450), (2, 2000), (3, -2700), (4, 14900)]:
+    x, y = pole(year)
+    b += f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" fill="{PCOL}"/>'
+    dx, dy = x - cx, y - cy
+    d = math.hypot(dx, dy)
+    b += marker(x + dx / d * 34, y + dy / d * 34, n)
+write('p8_deepening/himmelspol_beschriften.svg', svg(W, H, b))
+
+
+# ── Q6: the pole's path on the sky, three candidates (exaggerated, fewer waves) ──
+# The smooth circle is no option: the question text already says the nutation is superposed.
+def pole_path(kind):
+    W = H = 340
+    cx, cy, R = 170, 185, 120
+    b = f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="{LIGHT}" stroke-width="1.5" stroke-dasharray="4 5"/>'
+    b += f'<circle cx="{cx}" cy="{cy}" r="4" fill="{GRAPH}"/>'
+    n_waves, pts = 6, []
+    a0, a1 = math.radians(200), math.radians(340)    # an arc across the bottom of the circle
+    roll = R * (a1 - a0) / n_waves / (2 * math.pi)   # rolling radius of a cycloid with this wavelength
+    for j in range(900):
+        t = j / 899
+        a = a0 + (a1 - a0) * t
+        s = n_waves * 2 * math.pi * t
+        if kind == 'waves':
+            r, da = R + 7 * math.sin(s), 0
+        elif kind == 'cusps':                        # cycloid: the path stops at every point on the circle
+            r, da = R + roll * (1 - math.cos(s)), -roll * math.sin(s) / R
+        else:                                        # loops: prolate trochoid
+            r, da = R + roll * (1 - math.cos(s)), -1.9 * roll * math.sin(s) / R
+        a += da
+        pts.append((cx + r * math.cos(a), cy - r * math.sin(a)))
+    b += polyline(pts, PCOL, 2.8, end_arrow=True)
+    return svg(W, H, b)
+
+
+for k, kind in {1: 'cusps', 2: 'waves', 3: 'loops'}.items():
+    write(f'p8_deepening/polbahn_{k}.svg', pole_path(kind))
+
+
+# ── E3: the Moon's orbit against the equator, edge-on, 9.3 years apart ──
+W, H = 900, 300
+b = ''
+INC = math.radians(5.15)
+for x0, title, m in [(220, '(a)', INC), (670, '(b)  9,3 Jahre später', -INC)]:
+    y0, Rl = 185, 180
+    b += text(x0 - 200, 40, title, NAVY, 20, 'start', 'normal', 'bold')
+    b += line(x0 - 205, y0, x0 + 205, y0, GREY, 2)                                   # ecliptic
+    # left end, on the side away from the Moon's orbit
+    b += text(x0 - 205, y0 + (-10 if m > 0 else 22), 'Bahnebene der Erde', GREY, 14, 'start', 'normal', 'normal')
+    ex, ey = math.cos(EPS), math.sin(EPS)                                             # equator: 23.4° to the ecliptic
+    b += line(x0 - 195 * ex, y0 + 195 * ey, x0 + 195 * ex, y0 - 195 * ey, NAVY, 2)
+    b += text(x0 + 195 * ex - 8, y0 - 195 * ey - 8, 'Äquator', NAVY, 14, 'end', 'normal', 'bold')
+    mx, my = math.cos(m), math.sin(m)                                                 # Moon's orbit, ±5.1°
+    b += line(x0 - Rl * mx, y0 + Rl * my, x0 + Rl * mx, y0 - Rl * my, GRAPH, 2.4, '8 5')
+    b += f'<circle cx="{x0 + Rl * mx:.1f}" cy="{y0 - Rl * my:.1f}" r="11" fill="{LIGHT}" stroke="{NAVY}" stroke-width="1.6"/>'
+    lx, ly = x0 - Rl * mx, y0 + Rl * my
+    b += text(x0 - 200 if m > 0 else lx + 30, ly + (20 if m > 0 else -10), 'Mondbahn', GRAPH, 14, 'start', 'normal', 'bold')
+    # the Earth, small, with its axis
+    b += (f'<ellipse cx="{x0}" cy="{y0}" rx="26" ry="21" fill="{EARTH_BULGE}" stroke="{NAVY}" stroke-width="1.6" '
+          f'transform="rotate({-math.degrees(EPS):.1f} {x0} {y0})"/>')
+    b += line(x0 - 42 * ey, y0 - 42 * ex, x0 + 42 * ey, y0 + 42 * ex, GRAPH, 2)
+    # angle between the Moon's orbit and the equator
+    ang = math.degrees(EPS - m)
+    arc = [(x0 + 120 * math.cos(t), y0 - 120 * math.sin(t)) for t in (m + (EPS - m) * j / 20 for j in range(21))]
+    b += polyline(arc, PCOL, 2)
+    b += text(arc[10][0] + 8, arc[10][1] + 6, f'{ang:.1f}°'.replace('.', ','), PCOL, 16, 'start', 'normal', 'bold')
+write('p8_deepening/mondbahn.svg', svg(W, H, b))
+
 print('ok')
