@@ -5,12 +5,6 @@ RewriteEngine On
 # If it lives at the domain root (i.e. locally) use: RewriteBase / [local]
 RewriteBase /
 
-# ── API routes → PHP files ────────────────────────────────────────────────────
-RewriteRule ^api/users/check$       api/users/check.php   [L]
-RewriteRule ^api/users/create$      api/users/create.php  [L]
-RewriteRule ^api/progress/save$     api/progress/save.php [L]
-RewriteRule ^api/progress/([^/]+)$  api/progress/load.php?username=$1 [L,QSA]
-
 # ── Angular client-side routing ───────────────────────────────────────────────
 # Serve real files and directories as-is; everything else → index.html
 RewriteCond %{REQUEST_FILENAME} !-f

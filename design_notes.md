@@ -4,7 +4,7 @@ What was built and why: the decisions behind the module and its simulation, for 
 
 Built with Claude by Carlo (physics education group, Göttingen), 2026-10-26 to 2026-10-30. It replaces the working documents `build_process.md` and `simulation_implementation.md`.
 
-Related: the simulation repo ([Ilias-Precession-Module-Simulation](https://github.com/CVC97/Ilias-Precession-Module-Simulation), everything on `master`) has its own `design_notes.md` (physics model, module build, bridge, pitfalls) and README (release steps); the rough lab data are in its gitignored `experimental.md`. The infrastructure comes from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module); its developer guide is `../ilias-pohl-module/.learning_module_readme.md`, its design notes `../ilias-pohl-module/design_notes.md` (section 8 there: what both modules share and keep in sync). The landing page at the server root, `../index.html`, links to both modules and is uploaded by hand.
+Related: the simulation repo ([Ilias-Precession-Module-Simulation](https://github.com/CVC97/Ilias-Precession-Module-Simulation), everything on `master`) has its own `design_notes.md` (physics model, module build, bridge, pitfalls) and README (release steps); the rough lab data are in its gitignored `experimental.md`. The infrastructure comes from the [Pohl module](https://github.com/CVC97/Ilias-Pohl-Module); its developer guide is `../ilias-pohl-module/.learning_module_readme.md`, its design notes `../ilias-pohl-module/design_notes.md` (section 8 there: what both modules share and keep in sync). The portal `../interapt-portal/` holds the landing page at the server root, the login shared by all modules, the PHP API and the schema; its `design_notes.md` has the login model.
 
 
 ## 1 Status (2026-11-17)
@@ -24,7 +24,7 @@ Versuch 4 *Kreiselpräzession* (Grundpraktikum Experimentalphysik I). In the lab
 |---|---|
 | **One linear path**, no strands, no decision pages | Pohl's two strands and decision pages served a choice between experiment and theory; here everything builds on the previous segment. |
 | **No scored tests**, only retryable learning questions | In Pohl, tests were mainly a shortcut past the learning pages via the decision pages. Without those they'd be a lot of code (test components, scoring, end page) for a check the learning questions already do. `test-tracking.ts` stays, empty, because data export, summary and report read it. |
-| **Infrastructure copied from Pohl as it is** (bridge, PHP API, MySQL tracking, summary, report) | Proven, shared database `interapt`; web development is a means to an end here. Don't modernise or refactor copied code. |
+| **Infrastructure copied from Pohl as it is** (tracking, summary, report; the login, PHP API and database are the portal's since 2026-11-17) | Proven, shared database `interapt`; web development is a means to an end here. Don't modernise or refactor copied code. |
 | **One 3D Unity simulation, embedded on six pages** with a preset each | The point of the module is to *see* L⃗, ω⃗ and D⃗ in 3D and how they move. The sim is the main tool, not a side path. |
 | **Sim embedded last**, pages first built with placeholders | Content work didn't wait on Unity; the page texts were written as if the sim were there. |
 | **No Versuchsanleitung**; the target page "Abschluss" is the Lernpfad summary alone | No guide is planned (Carlo, 2026-10-30). The target page stays the true end and means the same as in Pohl: summary and report, nothing to work on. |
@@ -158,7 +158,7 @@ Unused on purpose: friction on the learning pages (sub-page 1 of p7 has no sim; 
 - **Preset defaults are "on"** (see 4): a missing `show` key shows a helper.
 - **Push sign quirk:** positive `pushThetaDot` raises the wheel on `lab` but lowers the disk on `top`. Only p6 uses it (lab, positive).
 - **`frontend/public/` is not served by default** in this Angular setup (`assets` only had `src/assets`): `angular.json` maps `public/sim` → `sim`.
-- **Local DB:** `db_host` must be `127.0.0.1`; with `localhost` PHP looks for a Unix socket instead of the Docker port.
+- **Local API:** the portal's `php -S` needs `PHP_CLI_SERVER_WORKERS=4` (single-threaded, it hangs on an idle Chrome connection); its `db_host` must be `127.0.0.1`. This module runs on port 4201 locally, where the login page sends it.
 - **Screenshots of the Unity canvas** in headless Chrome need `--use-angle=swiftshader --enable-unsafe-swiftshader` (WebGL 2). Puppeteer is a devDependency; theme via `localStorage.theme`, dev mode via `sessionStorage.devMode` before load.
 - **Physics checks without Unity:** `GyroscopeModel.cs` is plain C#: run it and the EditMode tests with `dotnet` (NUnit), and compile the sim's scripts with `dotnet build Assembly-CSharp.csproj` (Unity-generated) while the editor holds the project lock.
 - **The sim's state is the truth for gates**, but the panel shows `current` (what the page sent): the sim's reply lags by up to 100 ms.
@@ -200,7 +200,7 @@ Registering a learning page: README, *Adding a Learning Page*. Beyond that:
 - **Physics details not verifiable from the material** (Carlo to confirm): pendulum part (wheel clamped, pendulum weight screwed in, two opposite positions because of unbalance); light barrier one interruption per turn; the notch side of the add-on weight; the reason for timing half a precession turn (`measureText1b` gives only the friction argument); nutation measured on the balanced gyroscope.
 - **Sim polish:** p7's trail (thin light grey on the light stage) has weak contrast; the mouse wheel over the sim zooms instead of scrolling the page; no touch rotation on phones/tablets; p4 at 1000 rpm: the disk can hide the short arrows in some phases (re-check with the new camera); the Push sign quirk; `precessionArc`/`precessionVector` can be deleted sim-side.
 - **QA not done systematically:** load time first visit vs. cached, memory when switching sub-pages and segments repeatedly.
-- **Backend open issues (login model, data protection and others):** kept with the shared backend, in *Open Issues* of the Pohl module's developer guide (`../ilias-pohl-module/.learning_module_readme.md`). The PHP and the schema are identical in both modules: change them together.
+- **Backend open issues (consent wording, codename scheme, data protection and others):** in the portal's `design_notes.md` and *Open Issues* of the Pohl module's developer guide (`../ilias-pohl-module/.learning_module_readme.md`). The session and data-export services are the same in both modules: change them together.
 - **Inherited from Pohl:** a cold load straight onto a learning page can log `MathJax.typesetPromise is not a function` (later renders work). The script figures are small and slightly upscaled.
 
 

@@ -17,9 +17,8 @@ This README says how to run, deploy and extend the module. **Why** it is built t
 <summary>Project Structure Tree</summary>
 
 ```
-ilias_bridge.html                               // entry point from ILIAS; username + key form
-.htaccess                                       // routing: /api/* → PHP, rest → index.html (RewriteBase / locally)
-docker-compose.yml                              // local MySQL container (dev only)
+ilias_bridge.html                               // redirect to the portal's login page, for old ILIAS links
+.htaccess                                       // routing: Angular URLs → index.html (RewriteBase / locally)
 sim.version                                     // simulation release used by fetch-sim and the deploy
 .gitignore
 README.md
@@ -33,26 +32,9 @@ design_notes.md                                 // decisions and their reasons, 
 │       fetch-sim.sh                            // simulation build → frontend/public/sim/ (npm run fetch-sim)
 │       make_figures.py                         // generates the drawn SVG figures in assets/images
 │
-├── api/                                        // PHP backend
-│       config.php                              // DB credentials + module config (gitignored)
-│       config.example.php                      // template for config.php
-│       db.php                                  // PDO connection (singleton)
-│       module.php                              // resolves MODULE_NAME → modules.id
-│       router.php                              // local dev router (php -S only)
-│       lib.php                                 // shared by all endpoints: responses, input checks, course key, user lookup
-│       schema.sql                              // database schema (run once to initialise)
-│       │
-│       ├── users/
-│       │       check.php                       // POST /api/users/check
-│       │       create.php                      // POST /api/users/create
-│       │
-│       └── progress/
-│               save.php                        // POST /api/progress/save
-│               load.php                        // GET  /api/progress/{username}
-│
 └── frontend/                                   // Angular application
     │   angular.json                            // build configuration (stylesheets, icons, etc.)
-    │   proxy.conf.json                         // dev proxy: /api → localhost:8000
+    │   proxy.conf.json                         // dev proxy: /api → the portal on localhost:8000
     │
     ├── public/sim/                             // Unity simulation build (gitignored, from npm run fetch-sim)
     │
@@ -98,26 +80,13 @@ design_notes.md                                 // decisions and their reasons, 
 
 ## Running Locally
 
-You need Docker, PHP 8 with `pdo_mysql`, Node.js 22 or newer, `curl` and `unzip`.
+You need Node.js 22 or newer, `curl` and `unzip`, and for saving progress the portal `interapt-portal` (`../interapt-portal/`: login, PHP API, Docker MySQL), set up as its README says.
 
 ### First-time setup
 
 ```bash
 git clone https://github.com/CVC97/Ilias-Precession-Module.git ilias-precession-module
 cd ilias-precession-module
-cp api/config.example.php api/config.php
-```
-
-Edit `api/config.php` so that it matches the Docker database from `docker-compose.yml`:
-
-```php
-'db_host'     => '127.0.0.1',       // not 'localhost': PHP would then look for a local socket, not the Docker port
-'db_port'     => 3306,
-'db_user'     => 'pohl_user',
-'db_password' => 'pohl_password',
-'db_name'     => 'interapt',
-'module_name' => 'precession',
-'module_key'  => 'test',            // the course key you type on the bridge page; any value locally
 ```
 
 Install the dependencies and download the simulation (the release named in `sim.version`, into `frontend/public/sim/`, about 18 MB):
@@ -130,28 +99,15 @@ npm run fetch-sim
 
 ### Starting the module
 
-Three processes, each in its own terminal, all started from the project root:
+Start the portal (in `../interapt-portal/`: `sudo docker compose up -d` and `PHP_CLI_SERVER_WORKERS=4 php -S localhost:8000 api/router.php`), then this module on port 4201, where the login page expects it (Pohl uses 4200):
 
 ```bash
-# terminal 1: database (the first start creates the tables from api/schema.sql)
-sudo docker compose up
-
-# terminal 2: PHP API
-php -S localhost:8000 api/router.php
-
-# terminal 3: Angular dev server
-cd frontend && npx ng serve
+cd frontend && npx ng serve --port 4201
 ```
 
 Then open:
-- **`http://localhost:8000/bridge`**: start like a student, via the bridge page (registered user, progress is saved)
-- **`http://localhost:4200`**: the app directly (rogue user session, nothing is saved)
-
-To empty the local database (deletes all users and progress; the tables are created again on the next `up`):
-
-```bash
-sudo docker compose down -v
-```
+- **`http://localhost:8000/login/?next=precession`**: log in like a student (progress is saved); the login counts for all modules
+- **`http://localhost:4201`**: the app directly; without a login as a guest (nothing is saved)
 
 
 ## Deploying to the Server
@@ -163,7 +119,7 @@ Which simulation build is live: `https://interapt.uni-goettingen.de/precession/s
 Pushing to `master` triggers `.github/workflows/deploy.yml`:
 1. Installs Node, runs `npm ci`, fetches the simulation release named in `sim.version` (`tools/fetch-sim.sh`), builds the Angular app with `--base-href "https://interapt.uni-goettingen.de/precession/"`
 2. Writes a production `.htaccess` (`RewriteBase /precession/`) into the build output
-3. Uploads via SFTP: Angular dist incl. that `.htaccess` → `precession/`, `api/` (excluding `config.php` and the development files), `ilias_bridge.html`
+3. Uploads via SFTP: Angular dist incl. that `.htaccess` → `precession/`, and `ilias_bridge.html` (the redirect to the login page). The API and the login page are deployed with the portal.
 
 **One-time setup** — add these secrets in GitHub → repo → Settings → Secrets and variables → Actions:
 `SFTP_HOST`, `SFTP_PORT`, `SFTP_USER`, `SFTP_PASS`, `SFTP_REMOTE_DIR`
@@ -172,39 +128,32 @@ To skip the pipeline for a commit, include `[skip ci]` in the commit message. A 
 
 ### First-time server setup
 
-Create `api/config.php` on the server (copy from `config.example.php`) with the production credentials, `module_name => 'precession'` and the course key. The database `interapt` is shared with the other modules; the `precession` row in `modules` is created automatically on first use.
+Nothing beyond the GitHub secrets: the database, its credentials and the course keys are set up with the portal (its README: deploy it before this module's next deploy, which removes the old `precession/api/`).
 
 
 ## API
 
-| Method | Endpoint | File | Description |
-|--------|----------|------|-------------|
-| POST | `/api/users/check` | `users/check.php` | Validate username and course key; check if the user exists |
-| POST | `/api/users/create` | `users/create.php` | Register a new user (needs the course key) |
-| POST | `/api/progress/save` | `progress/save.php` | Save page visits and question attempts; a row sent twice is stored once |
-| GET | `/api/progress/{username}` | `progress/load.php` | Load page visits and the latest attempt per question |
+The module calls the portal's API at the server root, relative to its `<base href>` (`../api/…`), with `MODULE_NAME` (`storage-prefix.ts`, `'precession'`); the login cookie says whose data it is:
 
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/auth/me` | Who is logged in (on startup); 401 = guest |
+| GET | `/api/progress?module=precession` | Page visits and the latest attempt per question in this module |
+| POST | `/api/progress/save` | `{module, visits, attempts}`; a row sent twice is stored once |
 
-## Database Schema
-
-| Table | Purpose |
-|-------|---------|
-| `modules` | One row per learning module (e.g. `precession`, `pohl`) — scopes all user data |
-| `users` | One row per username per module |
-| `page_visits` | One row per page visit: route, sub-page, query string, duration |
-| `question_attempts` | One row per submitted answer, each retry included; `kind` is always `learning` in this module |
+Endpoints, schema and the login model: the portal's README and `design_notes.md`. In this module `question_attempts.kind` is always `learning`.
 
 
 ## Project Services
 
 - **theme.ts:** light / dark mode
-- **session.ts:** reads `session_id` from the URL (set by the bridge), falls back to a `rogue_user_` identifier for direct access
+- **session.ts:** who is using the module: the logged-in student (asked from the portal's `api/auth/me` before the tracking services start) or a guest with a `rogue_user_` id
 - **analytics.ts:** page visit durations on route changes
 - **results-tracking.ts:** learning question answers; allows retries and sends each attempt; per student in `localStorage`
 - **storage-prefix.ts:** `'precession:'`, the prefix of every `localStorage` key holding this module's state; the modules share one origin and so one `localStorage`, and must not read each other's data
 - **attempt-outbox.ts:** holds each submitted answer, also across reloads, until the server has confirmed it
 - **test-tracking.ts:** kept empty (no tests in this module); data-export, summary and report still read it
-- **data-export.ts:** sends what the server hasn't confirmed yet when the tab is hidden and on `pagehide`, loads progress on startup; skips rogue users
+- **data-export.ts:** sends what the server hasn't confirmed yet when the tab is hidden and on `pagehide`, loads progress on startup; skips guests; on a 401 keeps the rows and asks to log in again
 - **summary.service.ts:** builds the Lernpfad summary; `MODULE_LABELS`, `PAGE_LABELS` and `PAGE_TOTALS` hold the display names
 - **html-report.service.ts:** generates the downloadable HTML report (images embedded, answers coloured)
 - **learning-report-registry.ts:** `PAGE_REGISTRY` — page content per route and sub-page for the report
